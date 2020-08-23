@@ -38,3 +38,14 @@ All above pages are using the same base (base.html) which has header, footer, me
 - python manage.py makemigrations
 - python manage.py migrate
 - python manage.py runserver
+
+TO create new superuser: python manage.py createsuperuser
+
+
+Note: login pages are not yet implemented. To test we can simply login into admin panel using below url and credentials.
+URL: http://localhost:8000/admin/
+
+
+Deployed URL: https://demo-surveyform.herokuapp.com/
+user: admin
+Password: Admin@123!
