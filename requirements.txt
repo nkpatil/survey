@@ -7,3 +7,4 @@ psycopg2-binary==2.8.5
 pytz==2020.1
 six==1.15.0
 unicodecsv==0.14.1
+whitenoise==5.2.0
