@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-12"> Survey : {{ form_data.name }} </div>
+      </div>
+      <div class="row">
+        <div class="col-12"> Description : {{ form_data.desc }} </div>
+      </div>
+    </div>
+  </div>
+  <form onsubmit='return onSubmit(this);'>
+    <div class="box">
+      {% for section in form_data.section_list %}
+      <div class="card section-card" style="order:{{section.order}};">
+        <div class="card-header">
+          <div class="row">{{ section.name }}</div>
+          <div class="row description">{{ section.desc }}</div>
+        </div>
+        <div class="card-body box">
+          {% for question in section.question_list %}
+            <div class="card question-card" style="order:{{question.order}};">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12"> 
+                    {{ question.title }}
+                    {% if question.required %} <span style="color:red;">*</span> {% endif %}
+                  </div>
+                  <div class="col-12 description"> {{ question.desc }} </div>
+                  <div class="col-12">
+                    {% if question.input_type == "radio" %}
+                      {% for option in question.options %}
+                      <div class="custom-control custom-radio">
+                        <input type="radio" class="custom-control-input" id="{{ question.id }}_{{ option }}" name="{{ question.id }}" value="{{ option }}" {% if question.required %}required{%endif%}>
+                        <label class="custom-control-label" for="{{ question.id }}_{{ option }}">{{ option }}</label>
+                      </div>
+                      {% endfor %}
+                    {% elif question.input_type == "static" %}
+                      <!-- do nothing -->
+                    {% elif question.input_type == "dropdown" %}
+                      <select class="browser-default custom-select" name="{{ question.id }}" {% if question.required %}required{%endif%}>
+                        <option value="" disabled selected>Select</option>
+                        {% for option in question.options %}
+                          <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                      </select>
+                    {% elif question.input_type == "textarea" %}
+                      <textarea class="form-control" name="{{ question.id }}" {% if question.required %}required{%endif%}></textarea>
+                    {% elif question.input_type == "text" or question.input_type == "number" %}
+                      <input class="form-control" type="{{ question.input_type }}" name="{{ question.id }}" {% if question.required %}required{%endif%}>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <button class="btn btn-secondary" style="width: 95%; margin: 20px;">Submit</button>
+  </form>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script type="text/javascript">
+    function onSubmit( form ){
+      var dataset = $(form).serializeArray();
+      var data_to_post = [];
+      for (i in dataset) {
+        dict_val = dataset[i];
+        name = dict_val['name'];
+        val = dict_val['value'];
+        if(val == "") continue;
+        data_to_post.push({question: name, text: val});
+      }
+      data_to_post = JSON.stringify(data_to_post);
+      console.log(data_to_post);
+      try{
+        $.ajax({
+            type: 'POST',
+            url: '/v1/answer/',
+            data: data_to_post,
+            headers: {'X-CSRFToken': '{{csrf_token}}' },
+            success: function(data) {
+              alert('Saved successfully!');
+            },
+            contentType: "application/json",
+            dataType: 'json'
+        });
+      }catch(err){
+        console.log(err);
+      };
+      return false;
+    }
+  </script>
+{% endblock %}

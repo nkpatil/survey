@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <form onsubmit='return false;'>
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-3">
+            <button class="btn btn-secondary" onclick="downloadAsJSON();">Download as JSON</button>
+          </div>
+          <div class="col-7"></div>
+          <div class="col-2">
+            <button class="btn btn-secondary" onclick="saveSurveyForm();">Save Form</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-6">
+            <div class="form-group">
+              <label for="survey_name">Survey Name</label>
+              <input type="text" class="form-control" id="survey_name" placeholder="Input survey name here" required="">
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group input-sm">
+              <label for="survey_desc">Survey Description</label>
+              <textarea type="text" class="form-control" id="survey_desc" placeholder="Tell more about survey"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <div id="dynamic_container"></div>
+  <hr/>
+  <div align="right">
+    <button class="btn btn-secondary" data-toggle="modal" data-target="#modelNewSection">Add New Section</button>
+  </div>
+
+  <!-- Modal for section -->
+  <div class="modal fade" id="modelNewSection" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <form onsubmit='return onSubmitSection(this);' style="width: 100%;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Create New Section</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="card">
+            <div class="card-body">
+                <div class="row">
+                  <div class="form-group">
+                    <label for="sectionTitle">Section Title</label>
+                    <input type="text" class="form-control" id="sectionTitle" placeholder="Input section title here" required>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="form-group">
+                    <label for="sectionDesc">Section Description</label>
+                    <textarea type="text" class="form-control" id="sectionDesc" placeholder="Input question title here"></textarea>
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary">Create Section</button>
+        </div>
+      </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for question -->
+  <div class="modal fade" id="modelNewQuestion" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <form onsubmit='return onSubmit(this);' style="width: 100%;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Create New Question</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="card">
+            <div class="card-body">
+                <div class="row">
+                  <div class="form-group">
+                    <label for="newItemType">Input Type</label>
+                    <select class="browser-default custom-select" id="newItemType" required>
+                      <option value="" disabled selected>Select</option>
+                      <option value="text">Small Text</option>
+                      <option value="textarea">Large Text</option>
+                      <option value="number">Number Field</option>
+                      <option value="radio">Radio Buttons</option>
+                      <option value="dropdown">Dropdown</option>
+                      <option value="static">Static Field</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="form-group">
+                    <label for="newItemQuestion">Question</label>
+                    <input type="text" class="form-control" id="newItemQuestion" placeholder="Input question title here" required>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="form-group">
+                    <label for="newItemQuestionDesc">Question Description</label>
+                    <textarea type="text" class="form-control" id="newItemQuestionDesc" placeholder="Input question title here"></textarea>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="form-group">
+                    <label for="newItemRequired">Required?</label>
+                    <label class="radio-inline">
+                      <input type="radio" name="newItemRequired" value="yes" checked>Yes
+                    </label>
+                    <label class="radio-inline">
+                      <input type="radio" name="newItemRequired" value="no">No
+                    </label>
+                  </div>
+                </div>
+                <div class="row" id="divNewItemOptions" style="display: none;">
+                  <div class="form-group">
+                    <label for="newItemOptions">Options</label>
+                    <textarea type="text" class="form-control" id="newItemOptions" placeholder="Input comma separated options"></textarea>
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary">Create Question</button>
+        </div>
+      </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script type="text/javascript">
+    var questionID = 1;
+    var sectionID = 1;
+    var questionSectionID = null;
+
+    $("#newItemType").change(function(){
+      input_type = this.value;
+      if(input_type == "radio" || input_type == "dropdown")
+        $("#divNewItemOptions").show();
+      else
+        $("#divNewItemOptions").hide();
+    });
+
+    function plusIcon(title){
+      return `<svg width="1em" title="${title}" height="1em" viewBox="0 0 16 16" class="bi bi-plus-square" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M8 3.5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5H4a.5.5 0 0 1 0-1h3.5V4a.5.5 0 0 1 .5-.5z"/>
+        <path fill-rule="evenodd" d="M7.5 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0V8z"/>
+        <path fill-rule="evenodd" d="M14 1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+      </svg>`;
+    }
+
+    function removeIcon(){
+      return `<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-archive" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M2 5v7.5c0 .864.642 1.5 1.357 1.5h9.286c.715 0 1.357-.636 1.357-1.5V5h1v7.5c0 1.345-1.021 2.5-2.357 2.5H3.357C2.021 15 1 13.845 1 12.5V5h1z"/>
+        <path fill-rule="evenodd" d="M5.5 7.5A.5.5 0 0 1 6 7h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5zM15 2H1v2h14V2zM1 1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H1z"/>
+      </svg>`;
+    }
+
+    function download(content, fileName, contentType) {
+        var a = document.createElement("a");
+        var file = new Blob([content], {type: contentType});
+        a.href = URL.createObjectURL(file);
+        a.download = fileName;
+        a.click();
+    }
+
+    function downloadAsJSON(){
+      jsonForm = convertFormToJSON();
+      download(JSON.stringify(jsonForm), 'Survey.json', 'application/json');
+    }
+
+    function saveSurveyForm(){
+      jsonForm = convertFormToJSON();
+      $.ajax({
+          type: 'POST',
+          url: '/v1/survey/',
+          data: JSON.stringify(jsonForm),
+          headers: {'X-CSRFToken': '{{csrf_token}}' },
+          success: function(data) {
+            alert("Saved successfully!");
+          },
+          contentType: "application/json",
+          dataType: 'json'
+      });
+    }
+
+    function convertFormToJSON(){
+      sections = [];
+      sec_order = 1;
+      total_ques = 0;
+      $("div.section-card").each(function() {
+          section_obj = {
+            name: $(this).attr("sectionName"),
+            desc: $(this).attr("sectionDesc"),
+            order: sec_order
+          }
+          section_id = $(this).attr("id");
+          questions = [];
+          ques_order = 1;
+          $(`#${section_id}`).find('.question-card').each(function() {
+            ques_obj = {
+              title: $(this).attr("qTitle"),
+              desc: $(this).attr("qDesc"),
+              input_type: $(this).attr("qtype"),
+              options: $(this).attr("qOptions"),
+              required: $(this).attr("qRequired"),
+              order: ques_order
+            }
+            questions.push(ques_obj);
+            ques_order += 1;
+            total_ques += 1;
+          });
+          section_obj['question_list'] = questions;
+          sections.push(section_obj);
+          sec_order += 1;
+      });
+
+      survey_name = $("#survey_name").val();
+      survey_desc = $("#survey_desc").val();
+
+      if(sections.length == 0 || total_ques == 0){
+        alert("Please create at least one section and question!");
+        return
+      }
+
+      jsonForm = {
+        name: survey_name,
+        desc: survey_desc,
+        section_list: sections
+      }
+      console.log(jsonForm);
+      return jsonForm
+    }
+
+    function makeInput(id, type, label, desc, required=false){
+      req_text = "";
+      req_icon = "";
+      if(required){
+        req_text="required";
+        req_icon = `<span style="color:red;">*</span>`;
+      }
+      var item_html = `<div class="row form-group">
+        <label for="${id}">${label} ${req_icon}</label>
+        <div class="col-12 description">${desc}</div>`;
+      if(type == "textarea")
+        item_html += `<textarea class="form-control" id="${id}" ${req_text}></textarea>`;
+      else if(type == "static"){}
+      else
+        item_html += `<input type="${type}" class="form-control" desc="${desc}" id="${id}" ${req_text}>`;
+      item_html += `</div>`;
+      return item_html;
+    }
+
+    function makeRadio(id, label, desc, options, required=false){
+      req_text = "";
+      req_icon = "";
+      if(required){
+        req_text="required";
+        req_icon = `<span style="color:red;">*</span>`;
+      }
+
+      var options = options.split(',');
+      var item_html = `<div class="row">
+        ${label} ${req_icon}</div>
+        <div class="col-12 description">${desc}</div>`;
+      for(i in options){
+        option = options[i];
+        item_html += `<div class="custom-control custom-radio">
+          <input type="radio" id="${id}_${option}" class="custom-control-input" name="${id}" value="${option}" ${req_text}>
+          <label class="custom-control-label" for="${id}_${option}">${option}</label>
+        </div>`;
+      }
+      return item_html;
+    }
+
+    function makeDropdown(id, label, desc, options, required=false){
+      req_text = "";
+      req_icon = "";
+      if(required){
+        req_text="required";
+        req_icon = `<span style="color:red;">*</span>`;
+      }
+
+      var options = options.split(',');
+      var item_html = `<div class="row"> 
+        ${label} ${req_icon}</div>
+        <div class="col-12 description">${desc}</div>`;
+      item_html += `<select class="browser-default custom-select" id="${id}" ${req_text}>
+        <option value="" disabled selected>Select</option>`;       
+      for(i in options){
+        option = options[i];
+        item_html += `<option value="${option}">${option}</option>`;
+      }
+      item_html += `</select>`;
+      return item_html;
+    }
+
+    function onSubmit( form ){
+      container = $(`#${questionSectionID}`);
+      container_html = container.html();
+      itemType = $("#newItemType").val();
+      newItemQuestion = $("#newItemQuestion").val();
+      newItemQuestionDesc = $("#newItemQuestionDesc").val();
+      newItemRequired = $("input[name='newItemRequired']:checked").val();
+      newItemOptions = $("#newItemOptions").val();
+      if(newItemRequired == "yes") newItemRequired=true
+      else newItemRequired=false
+
+      if(itemType == "radio")
+        newItem = makeRadio("ques_"+questionID, newItemQuestion, newItemQuestionDesc, newItemOptions, newItemRequired)
+      else if(itemType == "dropdown")
+        newItem = makeDropdown("ques_"+questionID, newItemQuestion, newItemQuestionDesc, newItemOptions, newItemRequired)
+      else
+        newItem = makeInput("ques_"+questionID, itemType, newItemQuestion, newItemQuestionDesc, newItemRequired);
+      newItemHtml = `<div class="card question-card" qtype="${itemType}" qTitle="${newItemQuestion}" qDesc="${newItemQuestionDesc}", qOptions="${newItemOptions}" qRequired="${newItemRequired}">
+        <span onclick="removeQuestion(this);">${removeIcon()}</span>
+        <div class="card-body">${newItem}</div></div>`;
+      container_html += newItemHtml;
+      container.html(container_html);
+      questionID += 1;
+      $('#modelNewQuestion').modal('hide');
+      return false;
+    }
+
+    function removeQuestion(obj){
+      $(obj).parent('.question-card').remove();
+    }
+
+    function onSubmitSection( form ){
+      //var dataset = $(form).serializeArray();
+      container_html = $("#dynamic_container").html();
+      sectionName = $("#sectionTitle").val();
+      sectionDesc = $("#sectionDesc").val();
+      newSection = `<div class="card section-card" sectionName="${sectionName}" sectionDesc="${sectionDesc}" id="div_section_${sectionID}">
+        <div class="card-header">
+          <div class="row">${sectionName}</div>
+          <div class="row description">${sectionDesc}</div>
+        </div>
+        <div class="card-body" id="section_${sectionID}"></div>
+        <div align="center">
+          <button class="btn btn-secondary" data-toggle="modal" data-target="#modelNewQuestion" onclick="updateQuestionSectionID('section_${sectionID}');">${plusIcon("Add New Question")}</button>
+        </div>
+      </div>`;
+      container_html += newSection;
+      $("#dynamic_container").html(container_html);
+      $('#modelNewSection').modal('hide');
+      sectionID += 1;
+      return false;
+    }
+
+    function updateQuestionSectionID(sectionID){
+      questionSectionID = sectionID;
+    }
+
+  </script>
+{% endblock %}

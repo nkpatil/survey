@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <select class="browser-default custom-select" id="survey_select">
+    <option value="" disabled selected>Select Survey</option>
+    {% for survey in surveys %}
+      <option value="{{ survey.id }}">{{ survey.name }}</option>
+    {% endfor %}
+  </select>
+    
+  <div class="card section-card">
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr><th>User</th> <th>Question</th>
+              <th>Answer</th> <th>Submitted At</th>
+          </tr>
+        </thead>
+        <tbody id="answers_view"></tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script type="text/javascript">
+    $("#survey_select").change(function () {
+      survey_id = this.value;
+      if(survey_id == "") return false;
+      $.ajax({
+            type: 'GET',
+            url: '/v1/answer/',
+            data: {question__section__survey: survey_id},
+            success: function(response) {
+              var html = "";
+              for (i in response){
+                ans = response[i];
+                html += `<tr><td>${ans['username']}</td> \
+                <td>${ans['question']}</td> <td>${ans['text']}</td> \
+                <td>${ans['submitted_at']}</td></tr>`;
+              }
+              $("#answers_view").html(html);
+            },
+            contentType: "application/json",
+            dataType: 'json'
+        });
+    });
+
+  </script>
+{% endblock %}
