@@ -1,3 +1,4 @@
+import json
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
@@ -45,7 +46,9 @@ class SurveyViewset(viewsets.ReadOnlyModelViewSet):
                     ques_obj.required = req
                     ques_obj.save()
 
-            return Response([], status=status.HTTP_201_CREATED)
+            return Response(
+                {'survey_id': survey_obj.id},
+                status=status.HTTP_201_CREATED)
         except Exception as err:
             print(str(err))
         return Response([], status=status.HTTP_400_BAD_REQUEST)

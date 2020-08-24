@@ -149,6 +149,23 @@
       </form>
     </div>
   </div>
+
+  <!-- Modal for section -->
+  <div class="modal fade" id="modelSurveyResponse" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <p>Survey saved successfully!</p>
+          <p>Please use / share below link to fill the survey:</p>
+          <p id="fill_form_link"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">ok</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 {% endblock %}
 
 {% block extra_scripts %}
@@ -201,7 +218,11 @@
           data: JSON.stringify(jsonForm),
           headers: {'X-CSRFToken': '{{csrf_token}}' },
           success: function(data) {
-            alert("Saved successfully!");
+            survey_id = data['survey_id'];
+            survey_form_url = "/fill_survey/" + survey_id;
+            fill_form_link = `<a href="${survey_form_url}" target="_blank">${survey_form_url}</a>`;
+            $("#fill_form_link").html(fill_form_link);
+            $('#modelSurveyResponse').modal('show');
           },
           contentType: "application/json",
           dataType: 'json'
