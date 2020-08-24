@@ -37,7 +37,7 @@
     </div>
   </form>
 
-  <div id="dynamic_container"></div>
+  <div><ul class="slides" id="dynamic_container" style="list-style-type:none; padding: 0px;"></ul></div>
   <hr/>
   <div align="right">
     <button class="btn btn-secondary" data-toggle="modal" data-target="#modelNewSection">Add New Section</button>
@@ -169,7 +169,45 @@
 {% endblock %}
 
 {% block extra_scripts %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
   <script type="text/javascript">
+
+    $(".slides").sortable({
+      placeholder: 'slide-placeholder',
+      axis: "y",
+      revert: 150,
+      start: function(e, ui){
+          
+          placeholderHeight = ui.item.outerHeight();
+          ui.placeholder.height(placeholderHeight + 15);
+          $('<div class="slide-placeholder-animator" data-height="' + placeholderHeight + '"></div>').insertAfter(ui.placeholder);
+      
+      },
+      change: function(event, ui) {
+          
+          ui.placeholder.stop().height(0).animate({
+              height: ui.item.outerHeight() + 15
+          }, 300);
+          
+          placeholderAnimatorHeight = parseInt($(".slide-placeholder-animator").attr("data-height"));
+          
+          $(".slide-placeholder-animator").stop().height(placeholderAnimatorHeight + 15).animate({
+              height: 0
+          }, 300, function() {
+              $(this).remove();
+              placeholderHeight = ui.item.outerHeight();
+              $('<div class="slide-placeholder-animator" data-height="' + placeholderHeight + '"></div>').insertAfter(ui.placeholder);
+          });
+          
+      },
+      stop: function(e, ui) {
+          
+          $(".slide-placeholder-animator").remove();
+          
+      },
+  });
+
+
     var questionID = 1;
     var sectionID = 1;
     var questionSectionID = null;
@@ -376,7 +414,7 @@
       container_html = $("#dynamic_container").html();
       sectionName = $("#sectionTitle").val();
       sectionDesc = $("#sectionDesc").val();
-      newSection = `<div class="card section-card" sectionName="${sectionName}" sectionDesc="${sectionDesc}" id="div_section_${sectionID}">
+      newSection = `<li class="slide"><div class="card section-card" sectionName="${sectionName}" sectionDesc="${sectionDesc}" id="div_section_${sectionID}">
         <div class="card-header">
           <div class="row">${sectionName}</div>
           <div class="row description">${sectionDesc}</div>
@@ -385,7 +423,7 @@
         <div align="center">
           <button class="btn btn-secondary" data-toggle="modal" data-target="#modelNewQuestion" onclick="updateQuestionSectionID('section_${sectionID}');">${plusIcon("Add New Question")}</button>
         </div>
-      </div>`;
+      </div></li>`;
       container_html += newSection;
       $("#dynamic_container").html(container_html);
       $('#modelNewSection').modal('hide');
