@@ -10,6 +10,8 @@ For fill survey page, wizard like panel can be used to fill the data section wis
 For form building (generating sections and questions dynamically), drag drop can be used to move up/down to set the order.
 Show survey page will have to be improved like format need to be fixed and option to download the data needs to be provided.
 
+Sections are movable, you can drag and move the section up and down and it will set order accordingly.
+
 ## Other UI Improvements
 
 Lot of components are similar and used at multiple places, which can be generalised and put into some utils and can be used anywhere.
@@ -29,6 +31,13 @@ All above pages are using the same base (base.html) which has header, footer, me
 - Section: Section table will store multiple sections under a survey which will then contain multiple questions. Fields: survey_id, name, description, order.
 - Question: To store questions and their details. Questions are connected to sections using foreign key and stores section_id, title, description, input_type, input length, required, order, options(comma separated values).
 - Answer: To store answers filled by uses. Fields: question_id, text (answer), user, submitted_at.
+
+
+## Frameworks and tools used
+- Backend: Django, python, postgresql
+- Deployment: Heroku
+- Frontend: HTML, css, javascript, jquery, ajax, bootstrap
+
 
 ## Local Installation and Setup
 (Install python-pip and setup a virtual environment)
